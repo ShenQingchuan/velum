@@ -25,7 +25,7 @@ export const isAtom = (val: unknown): val is Atom => {
 declare const AtomImplFlag: unique symbol // implement by proxy read __v_isAtom
 const atomImplFlagKey = '__v_isAtomImpl'
 
-type AtomCreator = <T, O extends AtomCreateOptions>(
+type AtomCreator = <T, O extends AtomCreateOptions = {}>(
   initValue: T,
   options?: O
 ) => O['readonly'] extends true ? ReadonlyAtom<T> : Atom<T>
