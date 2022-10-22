@@ -2,6 +2,7 @@ import { NOOP, hasChanged, isFunction, isObject, warn } from '@velum/shared'
 import {
   isReadonly,
   isShallow,
+  readonly,
   shallowReactive,
   toRaw,
   toReactive,
@@ -19,23 +20,22 @@ import type { Dep } from './dep'
 declare const AtomFlag: unique symbol // implement by proxy read __v_isAtom
 const atomFlagKey = '__v_isAtom'
 export const isAtom = (val: unknown): val is Atom => {
-  return !!(val && Reflect.get(val, atomFlagKey))
+  return !!(isFunction(val) && Reflect.get(val, atomFlagKey))
 }
-
-declare const AtomImplFlag: unique symbol // implement by proxy read __v_isAtom
-const atomImplFlagKey = '__v_isAtomImpl'
 
 type AtomCreator = <T, O extends AtomCreateOptions = {}>(
   initValue: T,
   options?: O
 ) => O['readonly'] extends true ? ReadonlyAtom<T> : Atom<T>
-export interface ReadonlyAtom<T = any> {
-  (): T
-  [AtomFlag]: true
-  [AtomImplFlag]?: AtomImpl<T>
-}
 
-export type Atom<T = any> = ReadonlyAtom<T> & {
+type AtomBase = {
+  [AtomFlag]: true
+}
+export type ReadonlyAtom<T = any> = AtomBase & {
+  (): Readonly<T>
+}
+export type Atom<T = any> = AtomBase & {
+  (): T
   set: InnerValueSetter<T>
 } & (T extends object
     ? {
@@ -91,8 +91,6 @@ function createAccessor<T, O extends AtomCreateOptions>(
     get(target, key) {
       if (key === atomFlagKey) {
         return true
-      } else if (key === atomImplFlagKey) {
-        return atomImpl
       } else if (key === 'destruct') {
         return atomImpl.destruct
       }
@@ -202,8 +200,9 @@ export class AtomImpl<T> {
 }
 
 export function transferAtomToReadonly<V = any>(
-  atom: Atom<V>
-): ReadonlyAtom<V> {
+  originalAtom: Atom<V>
+): V extends object ? ReadonlyAtom<V> : V {
+  const atom = () => readonly(originalAtom())
   return new Proxy(atom, {
     get(target, key) {
       if (key === 'set') {
@@ -211,7 +210,7 @@ export function transferAtomToReadonly<V = any>(
       }
       return (target as any)[key]
     },
-  })
+  }) as any
 }
 
 export function trackInnerValueRead(ref: AtomImplBase<any>) {

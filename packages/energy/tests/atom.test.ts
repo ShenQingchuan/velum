@@ -108,4 +108,35 @@ describe('energy/atom', () => {
     expect(bar().nested1).toBe('world')
     expect(atomObj().bar.nested1).toBe('world')
   })
+
+  test("readonly destructed atoms can't be changed", () => {
+    const originalConsoleWarn = console.warn
+    const spyWarn = vi
+      .spyOn(console, 'warn')
+      .mockImplementation((...args: any[]) => {
+        originalConsoleWarn(...args)
+      })
+    const atomObj = atom({
+      foo: 1,
+      bar: { nested1: 'hello', zig: false },
+    })
+    const { foo, bar } = atomObj.destruct
+    const roFoo = readonly(foo)
+    const roBar = readonly(bar)
+    // @ts-expect-error TypeScript will show error hint in IDE, because 'set' is not on `roFoo`
+    roFoo.set(2)
+    expect(roFoo()).toBe(1)
+    expect(foo()).toBe(1)
+    // @ts-expect-error TypeScript will show error hint in IDE, because 'nested1' is a readonly property
+    roBar().nested1 = 'world'
+    expect(roBar().nested1).toBe('hello')
+    expect(bar().nested1).toBe('hello')
+    expect(spyWarn).toHaveBeenCalledTimes(2)
+
+    // readonly atoms from destructed atom can still be updated by atomObj
+    atomObj().foo = 6
+    expect(roFoo()).toBe(6)
+    atomObj().bar.nested1 = 'velum'
+    expect(roBar().nested1).toBe('velum')
+  })
 })

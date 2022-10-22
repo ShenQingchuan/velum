@@ -100,14 +100,14 @@ export function reactive<T extends object>(target: T) {
  * Creates a readonly copy of the original object. Note the returned copy is not
  * made reactive, but `readonly` can be called on an already reactive object.
  */
-export function readonly<T extends object>(
+export function readonly<T = any>(
   target: T
 ): T extends Atom<infer V> ? ReadonlyAtom<V> : DeepReadonly<T> {
   if (isAtom(target)) {
     return transferAtomToReadonly(target) as any
   }
   return createReactiveObject(
-    target,
+    target as ReactiveTarget,
     true,
     readonlyHandlers,
     readonlyCollectionHandlers,
