@@ -94,4 +94,18 @@ describe('energy/atom', () => {
     a().foo = 2
     expect(r().foo).toBe(2)
   })
+
+  test("atom's fields can be destructed into separate atoms", () => {
+    const atomObj = atom({ foo: 1, bar: { nested1: 'hello', zig: false } })
+    const { foo, bar } = atomObj.destruct
+    expect(foo()).toBe(1)
+    expect(bar().nested1).toBe('hello')
+    expect(bar().zig).toBe(false)
+    foo.set(2)
+    expect(foo()).toBe(2)
+    expect(atomObj().foo).toBe(2)
+    bar().nested1 = 'world'
+    expect(bar().nested1).toBe('world')
+    expect(atomObj().bar.nested1).toBe('world')
+  })
 })

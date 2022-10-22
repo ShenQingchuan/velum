@@ -32,11 +32,18 @@ type AtomCreator = <T, O extends AtomCreateOptions = {}>(
 export interface ReadonlyAtom<T = any> {
   (): T
   [AtomFlag]: true
-  [AtomImplFlag]: AtomImpl<T>
+  [AtomImplFlag]?: AtomImpl<T>
 }
-export interface Atom<T = any> extends ReadonlyAtom<T> {
+
+export type Atom<T = any> = ReadonlyAtom<T> & {
   set: InnerValueSetter<T>
-}
+} & (T extends object
+    ? {
+        destruct: {
+          [F in keyof T]: Atom<T[F]>
+        }
+      }
+    : {})
 export type InnerValueSetter<T = any> = (arg: T | ((current: T) => T)) => void
 
 export interface AtomCreateOptions {
@@ -48,11 +55,24 @@ function createAtomCreator(): AtomCreator {
     initValue: T,
     options?: O
   ) => {
-    return createAccessorFromImpl<T, O>(initValue, options)
+    return createAccessor<T, O>(initValue, options)
   }
   return atomCreator
 }
-function createAccessorFromImpl<T, O extends AtomCreateOptions>(
+function createAccessorSetter<T>(
+  originalGetter: () => T,
+  callback: (newValue: T) => void
+) {
+  const setter: InnerValueSetter<T> = (arg: T | ((current: T) => T)) => {
+    if (isFunction(arg)) {
+      callback(arg(originalGetter()))
+      return
+    }
+    callback(arg)
+  }
+  return setter
+}
+function createAccessor<T, O extends AtomCreateOptions>(
   initValue: T,
   options?: O
 ) {
@@ -60,7 +80,12 @@ function createAccessorFromImpl<T, O extends AtomCreateOptions>(
   const accessor = () => atomImpl.value
 
   if (!options?.readonly) {
-    accessor.set = createAccessorSetter(atomImpl)
+    accessor.set = createAccessorSetter(
+      () => atomImpl.unwrap(),
+      (newValue) => {
+        atomImpl.value = newValue
+      }
+    )
   }
   const atom = new Proxy(accessor, {
     get(target, key) {
@@ -68,22 +93,42 @@ function createAccessorFromImpl<T, O extends AtomCreateOptions>(
         return true
       } else if (key === atomImplFlagKey) {
         return atomImpl
+      } else if (key === 'destruct') {
+        return atomImpl.destruct
       }
       return (target as any)[key]
     },
   })
 
-  return atom as O['readonly'] extends true ? ReadonlyAtom<T> : Atom<T>
+  return atom as unknown as O['readonly'] extends true
+    ? ReadonlyAtom<T>
+    : Atom<T>
 }
-function createAccessorSetter<T>(atomImpl: AtomImpl<T>) {
-  const setter: InnerValueSetter<T> = (arg: T | ((current: T) => T)) => {
-    if (isFunction(arg)) {
-      atomImpl.value = arg(atomImpl.unwrap())
-      return
-    }
-    atomImpl.value = arg
+function createDestructedAccessor<T, O extends AtomCreateOptions>(
+  original: AtomImpl<T>,
+  key: keyof T,
+  options?: O
+) {
+  const accessor = () => original.value[key]
+  if (!options?.readonly) {
+    accessor.set = createAccessorSetter(
+      () => original.value[key],
+      (newValue) => {
+        original.value[key] = newValue
+      }
+    )
   }
-  return setter
+  const atom = new Proxy(accessor, {
+    get(target, key) {
+      if (key === atomFlagKey) {
+        return true
+      }
+      return (target as any)[key]
+    },
+  })
+  return atom as unknown as O['readonly'] extends true
+    ? ReadonlyAtom<T[keyof T]>
+    : Atom<T[keyof T]>
 }
 
 type AtomImplBase<T> = {
@@ -138,6 +183,21 @@ export class AtomImpl<T> {
       this._value = useDirect ? newValue : toReactive(newValue)
       triggerInnerValueUpdate(this, newValue)
     }
+  }
+  public get destruct() {
+    const value = this._value
+    if (!isObject(value)) {
+      throw new Error("Atom with primitive value doesn't have destruct method")
+    }
+
+    const destruct: Record<string, Atom> = {}
+    Object.keys(value).forEach((key) => {
+      destruct[key] = createDestructedAccessor(this, key as keyof T, {
+        shallow: this.__v_isShallow,
+        readonly: this.__v_isReadonly,
+      })
+    })
+    return destruct
   }
 }
 
