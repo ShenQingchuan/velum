@@ -126,12 +126,58 @@ describe('energy/atom', () => {
     roBar().nested1 = 'world'
     expect(roBar().nested1).toBe('hello')
     expect(bar().nested1).toBe('hello')
-    expect(spyWarn).toHaveBeenCalledTimes(2)
+    expect(spyWarn).toHaveBeenCalledTimes(1)
 
     // readonly atoms from destructed atom can still be updated by atomObj
     atomObj().foo = 6
     expect(roFoo()).toBe(6)
     atomObj().bar.nested1 = 'velum'
     expect(roBar().nested1).toBe('velum')
+  })
+
+  test("atom's reactivity should work for array and collection types", () => {
+    const a = atom([1, 2, 3])
+    let dummy
+    let calls = 0
+    effect(() => {
+      calls++
+      dummy = a()[0]
+    })
+    expect(calls).toBe(1)
+    expect(dummy).toBe(1)
+    a()[0] = 2
+    expect(calls).toBe(2)
+    expect(dummy).toBe(2)
+
+    const b = atom(
+      new Map([
+        ['foo', 1],
+        ['bar', 2],
+      ])
+    )
+    let dummyMap
+    let callsMap = 0
+    effect(() => {
+      callsMap++
+      dummyMap = b().get('foo')
+    })
+    expect(callsMap).toBe(1)
+    expect(dummyMap).toBe(1)
+
+    b().set('foo', 2)
+    expect(callsMap).toBe(2)
+
+    const c = atom(new Set([1, 2, 3]))
+    let dummySet
+    let callsSet = 0
+    effect(() => {
+      callsSet++
+      dummySet = c().has(1)
+    })
+    expect(callsSet).toBe(1)
+    expect(dummySet).toBe(true)
+
+    c().delete(1)
+    expect(callsSet).toBe(2)
   })
 })

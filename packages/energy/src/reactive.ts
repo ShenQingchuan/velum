@@ -123,7 +123,6 @@ function createReactiveObject(
   proxyMap: WeakMap<ReactiveTarget, any>
 ) {
   if (!isObject(target)) {
-    console.warn(`value cannot be made reactive: ${String(target)}`)
     return target
   }
   // target is already a Proxy, return it.
