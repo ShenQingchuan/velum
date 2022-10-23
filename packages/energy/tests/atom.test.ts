@@ -1,6 +1,11 @@
 import { describe, expect, test, vi } from 'vitest'
 import { atom, effect, readonly } from '../src'
 
+const createObservedConsoleWarn = () => {
+  const originalConsoleWarn = console.warn
+  return vi.spyOn(console, 'warn').mockImplementation(originalConsoleWarn)
+}
+
 describe('energy/atom', () => {
   test("it's able to get value by call accessor", () => {
     const a = atom(1)
@@ -73,12 +78,7 @@ describe('energy/atom', () => {
   })
 
   test("readonly is working and it doesn't have a setter", () => {
-    const originalConsoleWarn = console.warn
-    const spyWarn = vi
-      .spyOn(console, 'warn')
-      .mockImplementation((...args: any[]) => {
-        originalConsoleWarn(...args)
-      })
+    const spyWarn = createObservedConsoleWarn()
     const ro = readonly({ foo: 1, bar: false })
     expect(ro).not.toHaveProperty('set')
     // TypeScript will show error hint in IDE, because 'foo' is a readonly property
@@ -110,12 +110,7 @@ describe('energy/atom', () => {
   })
 
   test("readonly destructed atoms can't be changed", () => {
-    const originalConsoleWarn = console.warn
-    const spyWarn = vi
-      .spyOn(console, 'warn')
-      .mockImplementation((...args: any[]) => {
-        originalConsoleWarn(...args)
-      })
+    const spyWarn = createObservedConsoleWarn()
     const atomObj = atom({
       foo: 1,
       bar: { nested1: 'hello', zig: false },

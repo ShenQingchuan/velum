@@ -1,9 +1,8 @@
 import { describe, expect, test, vi } from 'vitest'
 import { atom, effect, memo } from '../src'
 
-
 describe('energy/memo', () => {
-  test("should return updated value", () => {
+  test('should return updated value', () => {
     const value = atom<{ foo?: number }>({})
     const memoValue = memo(() => value().foo)
     expect(memoValue()).toBe(undefined)
