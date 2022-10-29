@@ -180,4 +180,19 @@ describe('energy/atom', () => {
     c().delete(1)
     expect(callsSet).toBe(2)
   })
+
+  test('atom of an array should be able to detect target element changes', () => {
+    const arrAtom = atom([1, 2, 3])
+    let dummy
+    let calls = 0
+    effect(() => {
+      calls++
+      dummy = arrAtom()[0]
+    })
+    expect(calls).toBe(1)
+    expect(dummy).toBe(1)
+    arrAtom().unshift(0)
+    expect(calls).toBe(2)
+    expect(dummy).toBe(0)
+  })
 })
