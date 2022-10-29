@@ -1,8 +1,8 @@
 {
-  "name": "@velum/shared",
+  "name": "@velum/energy",
   "version": "0.0.0",
   "packageManager": "pnpm@7.12.2",
-  "description": "Internal utility functions and constants shared across @velum packages.",
+  "description": "Reactivity mechanism implementation for Velum.",
   "license": "MIT",
   "files": [
     "dist"
@@ -18,8 +18,10 @@
     "access": "public"
   },
   "scripts": {
-    "dev": "tsup --watch",
     "build": "tsup && tsx ../../scripts/postbuild.mts"
+  },
+  "dependencies": {
+    "@velum/shared": "workspace:*"
   },
   "devDependencies": {},
   "engines": {

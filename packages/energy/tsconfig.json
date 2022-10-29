@@ -1,20 +1,16 @@
 {
   "compilerOptions": {
-    "rootDir": ".",
-    "baseUrl": ".",
     "target": "es2021",
     "module": "esnext",
-    "lib": ["es2019", "DOM"],
+    "lib": ["es2019"],
     "strict": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "skipLibCheck": true,
     "noUnusedLocals": true,
     "resolveJsonModule": true,
-    "types": ["node"],
-    "paths": {
-      "@velum/*": ["packages/*/src"]
-    }
+    "types": ["node"]
   },
-  "include": ["packages/*/src", "packages/*/tests", "scripts"]
+  "include": ["src", "tests", "scripts"],
+  "exclude": ["tests/fixtures"]
 }
