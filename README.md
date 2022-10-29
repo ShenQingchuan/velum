@@ -4,7 +4,7 @@
 
 ## Project progress
 
-- [ ] `@velum/energy`: <samp> track in branch [feat/reactivity](https://github.com/ShenQingchuan/velum/tree/feat/reactivity) </samp> <br/> Reactivity mechanism implementation for Velum.
+- [x] `@velum/energy`: Reactivity mechanism implementation for Velum.
 
 ...to be continued
 
