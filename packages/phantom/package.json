@@ -1,8 +1,8 @@
 {
-  "name": "@velum/energy",
+  "name": "@velum/phantom",
   "version": "0.0.0",
   "packageManager": "pnpm@7.12.2",
-  "description": "Reactivity mechanism implementation for Velum.",
+  "description": "Virtual DOM implementation for velum.",
   "license": "MIT",
   "files": [
     "dist"

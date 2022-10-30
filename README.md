@@ -5,6 +5,7 @@
 ## Project progress
 
 - [x] `@velum/energy`: Reactivity mechanism implementation for Velum.
+- [ ] `@velum/phantom`: <samp> track in branch [feat/phantom](https://github.com/ShenQingchuan/velum/tree/feat/reactivity) </samp> <br/> Virtual DOM implementation for Velum.
 
 ...to be continued
 
