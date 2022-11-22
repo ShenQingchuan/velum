@@ -1,4 +1,4 @@
-import { atom, For, render } from 'velum'
+import { atom, memo, For, render } from 'velum'
 
 function TaskApp() {
   // States
@@ -8,7 +8,7 @@ function TaskApp() {
     done: false, 
     deleted: false 
   }])
-
+  const taskTodo = memo(() => tasks().filter(t => !t.done && !t.deleted))
 
   // Handlers
   const submitInput = () => {
@@ -23,6 +23,12 @@ function TaskApp() {
         <input class="task-app__input" vSync={textInput} />
         <button class="task-app__submit" onClick={submitInput} />
       </div>
+
+      {taskTodo().length > 5 && (
+        <div class="task-app__warning">
+          You have too many tasks to do!
+        </div>
+      )}
 
       <ul class="task-app__task-list">
         <For each={tasks().filtered(t => !t.deleted)}>{(task, i) => (
