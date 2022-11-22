@@ -141,7 +141,7 @@ export class AtomImpl<T> {
   public dep?: Dep = undefined
 
   constructor(initValue: T, options?: AtomCreateOptions) {
-    const { shallow: isShallow = true, readonly: isReadonly = false } =
+    const { shallow: isShallow = false, readonly: isReadonly = false } =
       options ?? {}
     this.__v_isShallow = isShallow
     this.__v_isReadonly = isReadonly

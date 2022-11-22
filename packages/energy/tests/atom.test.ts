@@ -32,32 +32,8 @@ describe('energy/atom', () => {
     expect(calls).toBe(2)
   })
 
-  test('atom is default shallow', () => {
+  test('atom is default deep', () => {
     const a = atom({ foo: 32, bar: { zig: false, zag: 'hello' } })
-    let dummyFoo, dummyZag
-    let calls = 0
-    effect(() => {
-      calls++
-      dummyFoo = a().foo
-      dummyZag = a().bar.zag
-    })
-    expect(calls).toBe(1)
-    expect(dummyFoo).toBe(32)
-    expect(dummyZag).toBe('hello')
-    a().foo = 64
-    expect(calls).toBe(2)
-    expect(dummyFoo).toBe(64)
-
-    a().bar.zag = 'world'
-    expect(calls).toBe(2)
-    expect(dummyZag).toBe('hello')
-  })
-
-  test("it's able to make atom reactive deeply", () => {
-    const a = atom(
-      { foo: 32, bar: { zig: false, zag: 'hello' } },
-      { shallow: false }
-    )
     let dummyFoo, dummyZag
     let calls = 0
     effect(() => {
@@ -75,6 +51,30 @@ describe('energy/atom', () => {
     a().bar.zag = 'world'
     expect(calls).toBe(3)
     expect(dummyZag).toBe('world')
+  })
+
+  test("it's able to create shallow reactive atom", () => {
+    const a = atom(
+      { foo: 32, bar: { zig: false, zag: 'hello' } },
+      { shallow: true }
+    )
+    let dummyFoo, dummyZag
+    let calls = 0
+    effect(() => {
+      calls++
+      dummyFoo = a().foo
+      dummyZag = a().bar.zag
+    })
+    expect(calls).toBe(1)
+    expect(dummyFoo).toBe(32)
+    expect(dummyZag).toBe('hello')
+    a().foo = 64
+    expect(calls).toBe(2)
+    expect(dummyFoo).toBe(64)
+
+    a().bar.zag = 'world'
+    expect(calls).toBe(2)
+    expect(dummyZag).toBe('hello')
   })
 
   test("readonly is working and it doesn't have a setter", () => {
