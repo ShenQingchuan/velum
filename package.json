@@ -12,7 +12,7 @@
   "scripts": {
     "build": "turbo run build --filter=\"./packages/*\"",
     "dev": "turbo run dev --filter=\"./packages/*\"",
-    "lint": "eslint . --ext .vue,.js,.ts,.jsx,.tsx,.json,.md",
+    "lint": "eslint . --ext .js,.ts,.jsx,.tsx,.json,.md",
     "lint:fix": "pnpm run lint --fix",
     "test": "vitest",
     "publish": "pnpm build && changeset publish",
