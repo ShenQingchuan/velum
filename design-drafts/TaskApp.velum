@@ -1,0 +1,45 @@
+<script ts>
+import { atom } from 'velum'
+
+// States
+const textInput = atom('')
+const tasks = atom([{ 
+  content: 'Learn Velum',
+  done: false, 
+  deleted: false 
+}])
+
+// Handlers
+const submitInput = () => {
+  tasks().push({ content: textInput(), done: false, deleted: false })
+  textInput.set('')
+}
+</script>
+
+<div class="task-app">
+  <h2 class="task-app__title">Task App</h2>
+  
+  <v-if :on="tasks().length < 5">
+    <div class="task-app__typing-box">
+      <input class="task-app__input" v-sync="textInput" />
+      <button class="task-app__submit" :click="submitInput" />
+    </div>
+    <ul class="task-app__task-list">
+      <v-for :each="[task, i] in tasks().filtered(t => !t.deleted)">
+        <li :class="{
+          'task-app__task-item': true,
+          'task-app__task-item-done': task.done
+        }">
+          <span class="task-app__task-item-name">{{ `${i+1}: ${task.content}` }}</span>
+          <button class="task-app__task-item-done" :click="() => task.done = true">Done</button>
+          <button class="task-app__task-item-delete" :click="() => task.deleted = true">Delete</button>
+        </li>
+      </v-for>
+    </ul>
+  </v-if>
+  <v-else>
+    <div class="task-app__size-alert">
+      You've already contained 5 tasks for now, Please finish them first!
+    </div>
+  </v-else>
+</div>

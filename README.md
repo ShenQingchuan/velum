@@ -6,7 +6,7 @@
 
 - [x] `@velum/energy`: Reactivity mechanism implementation for Velum.
 
-...to be continued
+... To be continued
 
 
 ## License
