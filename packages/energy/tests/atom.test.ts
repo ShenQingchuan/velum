@@ -1,10 +1,14 @@
-import { describe, expect, test, vi } from 'vitest'
+import { beforeAll, describe, expect, test, vi } from 'vitest'
 import { atom, effect, readonly } from '../src'
 
 const createObservedConsoleWarn = () => {
   const originalConsoleWarn = console.warn
   return vi.spyOn(console, 'warn').mockImplementation(originalConsoleWarn)
 }
+
+beforeAll(() => {
+  vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+})
 
 describe('energy/atom', () => {
   test("it's able to get value by call accessor", () => {
