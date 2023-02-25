@@ -23,10 +23,10 @@ export const isAtom = (val: unknown): val is Atom => {
   return !!(isFunction(val) && Reflect.get(val, atomFlagKey))
 }
 
-type AtomCreator = <T, O extends AtomCreateOptions = {}>(
+type AtomCreator = <T>(
   initValue: T,
-  options?: O
-) => O['readonly'] extends true ? ReadonlyAtom<T> : Atom<T>
+  options?: AtomCreateOptions
+) => AtomCreateOptions['readonly'] extends true ? ReadonlyAtom<T> : Atom<T>
 
 type AtomBase = {
   [AtomFlag]: true
@@ -47,15 +47,12 @@ export type Atom<T = any> = AtomBase & {
 export type InnerValueSetter<T = any> = (arg: T | ((current: T) => T)) => void
 
 export interface AtomCreateOptions {
-  shallow?: boolean
+  deep?: boolean
   readonly?: boolean
 }
 function createAtomCreator(): AtomCreator {
-  const atomCreator = <T, O extends AtomCreateOptions>(
-    initValue: T,
-    options?: O
-  ) => {
-    return createAccessor<T, O>(initValue, options)
+  const atomCreator = <T>(initValue: T, options?: AtomCreateOptions) => {
+    return createAccessor<T>(initValue, options)
   }
   return atomCreator
 }
@@ -72,10 +69,7 @@ function createAccessorSetter<T>(
   }
   return setter
 }
-function createAccessor<T, O extends AtomCreateOptions>(
-  initValue: T,
-  options?: O
-) {
+function createAccessor<T>(initValue: T, options?: AtomCreateOptions) {
   const atomImpl = new AtomImpl(initValue, options)
   const accessor = () => atomImpl.value
 
@@ -98,14 +92,14 @@ function createAccessor<T, O extends AtomCreateOptions>(
     },
   })
 
-  return atom as unknown as O['readonly'] extends true
+  return atom as unknown as AtomCreateOptions['readonly'] extends true
     ? ReadonlyAtom<T>
     : Atom<T>
 }
-function createDestructedAccessor<T, O extends AtomCreateOptions>(
+function createDestructedAccessor<T>(
   original: AtomImpl<T>,
   key: keyof T,
-  options?: O
+  options?: AtomCreateOptions
 ) {
   const accessor = () => original.value[key]
   if (!options?.readonly) {
@@ -124,7 +118,7 @@ function createDestructedAccessor<T, O extends AtomCreateOptions>(
       return (target as any)[key]
     },
   })
-  return atom as unknown as O['readonly'] extends true
+  return atom as unknown as AtomCreateOptions['readonly'] extends true
     ? ReadonlyAtom<T[keyof T]>
     : Atom<T[keyof T]>
 }
@@ -136,21 +130,20 @@ type AtomImplBase<T> = {
 export class AtomImpl<T> {
   private _rawValue: T
   private _value: T
-  private readonly __v_isShallow: boolean
+  private readonly __v_isDeep: boolean
   private __v_isReadonly: boolean
   public dep?: Dep = undefined
 
   constructor(initValue: T, options?: AtomCreateOptions) {
-    const { shallow: isShallow = false, readonly: isReadonly = false } =
-      options ?? {}
-    this.__v_isShallow = isShallow
+    const { deep = false, readonly: isReadonly = false } = options ?? {}
+    this.__v_isDeep = deep
     this.__v_isReadonly = isReadonly
 
-    this._rawValue = isShallow ? initValue : toRaw(initValue)
+    this._rawValue = deep ? toRaw(initValue) : initValue
     this._value = isObject(initValue)
-      ? isShallow
-        ? shallowReactive(initValue)
-        : toReactive(initValue)
+      ? deep
+        ? toReactive(initValue)
+        : shallowReactive(initValue)
       : initValue
   }
 
@@ -174,7 +167,7 @@ export class AtomImpl<T> {
     }
 
     const useDirect =
-      this.__v_isShallow || isShallow(newValue) || isReadonly(newValue)
+      !this.__v_isDeep || isShallow(newValue) || isReadonly(newValue)
     newValue = useDirect ? newValue : toRaw(newValue)
     if (hasChanged(newValue, this._rawValue)) {
       this._rawValue = newValue
@@ -191,7 +184,7 @@ export class AtomImpl<T> {
     const destruct: Record<string, Atom> = {}
     Object.keys(value).forEach((key) => {
       destruct[key] = createDestructedAccessor(this, key as keyof T, {
-        shallow: this.__v_isShallow,
+        deep: this.__v_isDeep,
         readonly: this.__v_isReadonly,
       })
     })
